@@ -1,21 +1,21 @@
 <script setup lang="ts">
-import { NConfigProvider } from 'naive-ui';
+import {NConfigProvider, NDialogProvider} from 'naive-ui';
 
 </script>
 
 <template>
-  <n-config-provider>
-    <router-view />
+  <n-config-provider class="wrapper">
+    <n-dialog-provider>
+      <router-view/>
+    </n-dialog-provider>
   </n-config-provider>
 </template>
 
 <style lang="stylus">
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
+@import './styles/defaults.styl'
+
+html, body, #app, .wrapper
+  height 100%
+
+
 </style>
