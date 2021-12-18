@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import {NConfigProvider, NDialogProvider} from 'naive-ui';
+import {NConfigProvider, NDialogProvider, NMessageProvider, zhCN, dateZhCN } from 'naive-ui';
+import {RouterView} from "vue-router";
 
 </script>
 
 <template>
-  <n-config-provider class="wrapper">
+  <n-config-provider class="wrapper" :locale="zhCN" :date-locale="dateZhCN">
     <n-dialog-provider>
-      <router-view/>
+      <n-message-provider>
+        <router-view/>
+      </n-message-provider>
     </n-dialog-provider>
   </n-config-provider>
 </template>
