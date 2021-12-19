@@ -7,7 +7,7 @@ interface Team {
 
 interface TeamDetail {
     id?: number,
-    name: string,
+    name?: string,
     members: Array<TeamMember | Athlete | Referee>
 }
 

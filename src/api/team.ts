@@ -19,3 +19,13 @@ export async function getAllTeam(): Promise<R<Array<Team>>> {
     const resp = await axios.get('/all-teams')
     return resp.data
 }
+
+export async function getTeamDetail(): Promise<R<TeamDetail>> {
+    const resp = await axios.get(`/team-detail`)
+    return resp.data
+}
+
+export async function updateTeamDetail(data: TeamDetail): Promise<R<unknown>> {
+    const resp = await axios.post(`/leader/teams`, data)
+    return resp.data
+}

@@ -11,6 +11,8 @@ import {
   NButton,
   NTabs,
   NTabPane,
+  NTransfer,
+  NSpace,
   SelectOption,
   useDialog,
   useMessage
@@ -25,10 +27,32 @@ const dialog = useDialog()
 const loading = ref(false)
 const submitting = ref(false)
 
+const id = ref(0)
+
 
 //数据
-const availableAthletes = [];
-const availableReferees = [];
+const availableAthletes = ref<Array<Athlete>>([]);
+const availableReferees = ref<Array<Referee>>([]);
+
+const optionsAthletes = computed(() => {
+  availableAthletes.value.map(it=>{
+    return {
+      label: `${it.name}（${it.athleteId}）`,
+      value: it.id,
+    }
+  })
+})
+
+
+const optionsReferees = computed(() => {
+  availableReferees.value.map(it=>{
+    return {
+      label: it.name,
+      value: it.id,
+    }
+  })
+})
+
 
 const model = ref<Arrangement>({
   groups: []
@@ -37,6 +61,9 @@ const model = ref<Arrangement>({
 
 function refresh() {
   store.dispatch("tryUpdateEvents")
+  if (model.value.groups.length == 0) {
+    handleAdd()
+  }
 }
 
 onBeforeRouteUpdate(() => refresh())
@@ -95,11 +122,14 @@ const currentTab = ref<number>()
 function handleAdd() {
 
   const group: ArrangementGroup = {
+    groupId: id.value++,
+    groupName: '组名',
     athletes: [],
     referees: [],
   }
 
-  model.value.groups.push();
+  model.value.groups.push(group);
+
 
 }
 
@@ -123,7 +153,7 @@ function handleClose(name: number) {
       <template #footer>
         <n-button type="primary">提交</n-button>
       </template>
-      <n-spin :show="loading">
+      <n-spin :show="loading" class="full">
         <n-tabs
             v-model:value="currentTab"
             type="card"
@@ -133,8 +163,21 @@ function handleClose(name: number) {
             @add="handleAdd"
             tab-style="min-width: 80px;"
         >
-          <n-tab-pane v-for="group in model.groups" :name="group.groupName" :key="group.groupId">
-            {{ group }}
+          <n-tab-pane v-for="group in model.groups" :tab="group.groupName" :name="group.groupId" :key="group.groupId">
+            <div class="transfer">
+              <n-transfer
+                  :options="optionsAthletes"
+                  source-title="报名的运动员"
+                  target-title="分配到本组的运动员"
+                  size="large"
+              />
+              <n-transfer
+                  :options="optionsReferees"
+                  source-title="可选的裁判"
+                  target-title="本组的裁判"
+                  size="large"
+              />
+            </div>
           </n-tab-pane>
           <template #prefix>竞赛分组：</template>
         </n-tabs>
@@ -145,5 +188,30 @@ function handleClose(name: number) {
 
 
 <style scoped lang="stylus">
+.transfer
+  display flex
+  justify-content space-around
+  height 100%
+
+  :deep(.n-transfer-list)
+    display flex
+    flex-direction column
+    .n-transfer-list-body
+      flex 1 1 auto
+
+  :deep(&>div)
+    flex 1 1 auto
+    margin 0 24px
+
+:deep(.full)
+  height 100%
+  .n-spin-content
+    height 100%
+    .n-tabs
+      height 100%
+      display flex
+      flex-direction column
+      .n-tab-pane
+        flex 1 1 auto
 
 </style>

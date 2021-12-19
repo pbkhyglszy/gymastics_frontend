@@ -12,10 +12,15 @@ import {
   useMessage
 } from 'naive-ui'
 import {computed, ref} from "vue";
+import {useStore} from "vuex";
+import {getTeamDetail, updateTeamDetail} from "../../api/team";
+import {onBeforeRouteUpdate} from "vue-router";
 
 const message = useMessage()
+const store = useStore();
 
 interface TeamFromData {
+  id: number,
   name: string,
   leader: TeamMember,
   teamDoctor: TeamMember,
@@ -24,104 +29,49 @@ interface TeamFromData {
   athletes: Array<Athlete>,
 }
 
-const competitionEvents: Array<EventType> = [
-  {
-    id: 1,
-    eventName: '单杠',
-    gender: 'male',
-  },
-  {
-    id: 2,
-    eventName: '双杠',
-    gender: 'male',
-  },
-  {
-    id: 3,
-    eventName: '自由体操',
-    gender: 'male',
-  }, {
-    id: 4,
-    eventName: '自由体操',
-    gender: 'female',
-  },
-]
+// const competitionEvents: Array<EventType> = [
+//   {
+//     id: 1,
+//     eventName: '单杠',
+//     gender: 'male',
+//   },
+//   {
+//     id: 2,
+//     eventName: '双杠',
+//     gender: 'male',
+//   },
+//   {
+//     id: 3,
+//     eventName: '自由体操',
+//     gender: 'male',
+//   }, {
+//     id: 4,
+//     eventName: '自由体操',
+//     gender: 'female',
+//   },
+// ]
 
-const teamDetailRef = ref<TeamDetail>({
-  id: 0,
-  name: '小兔崽子队',
-  members: [
-    {
-      id: 0,
-      name: 'pb',
-      type: 'leader',
-      idNumber: '222222222222222222',
-      phone: '11111111111',
-    },
-    {
-      id: 1,
-      name: 'khy',
-      type: 'coach',
-      idNumber: '222222222222222222',
-      phone: '11111111111',
-      gender: 'male',
-    },
-    {
-      id: 2,
-      name: 'khy2',
-      type: 'coach',
-      idNumber: '222222222222222222',
-      phone: '11111111111',
-      gender: 'female',
-    },
-    {
-      id: 3,
-      name: 'Doctor. Pb',
-      type: 'team_doctor',
-      idNumber: '222222222222222222',
-      phone: '11111111111',
-    },
-    {
-      id: 4,
-      name: 'Referee. Pb',
-      type: 'referee',
-      idNumber: '222222222222222222',
-      phone: '11111111111',
-      userName: '233333',
-      password: 'pwd'
-    },
-    {
-      id: 5,
-      name: '小兔崽子',
-      type: 'athlete',
-      idNumber: '222222222222222222',
-      phone: '11111111111',
-      age: 10,
-      gender: 'male',
-      athleteId: '001',
-      eventIds: [
-        1, 2, 3,
-      ]
-    },
-    {
-      id: 5,
-      name: '小兔崽子2',
-      type: 'athlete',
-      idNumber: '222222222222222222',
-      phone: '11111111111',
-      age: 11,
-      gender: 'female',
-      athleteId: '001',
-      eventIds: [
-        1, 2, 4,
-      ]
-    },
-  ]
-});
+function refresh() {
+  store.dispatch("tryUpdateEvents")
+  getTeamDetail().then(result => {
+    if (result.code === 0) {
+      teamFormDataRef.value = toFormData(result.data!)
+    } else {
+      message.error(`获取队伍信息失败：${result.msg}`)
+    }
+  })
+}
+
+onBeforeRouteUpdate(() => refresh())
+refresh()
+
+
 const teamFormDataRef = ref<TeamFromData>({
+  id: -1,
   name: '',
   leader: {
     name: '',
-    type: 'leader',
+    type: 'team_leader',
     idNumber: '',
     phone: '',
   },
@@ -141,20 +91,20 @@ const teamFormDataRef = ref<TeamFromData>({
   athletes: [],
 })
 
-const optionsEvent = computed(() => {
-  return competitionEvents
-      .map(it => {
-        return {
-          label: it.eventName,
-          value: it.id,
-        }
-      })
-})
+// const optionsEvent = computed(() => {
+//   return store.state.competitionEvents
+//       .map((it: EventType) => {
+//         return {
+//           label: it.eventName,
+//           value: it.id,
+//         }
+//       })
+// })
 
 function filterOptionsEvent(gender: 'male' | 'female') {
-  return competitionEvents
-      .filter(it => it.gender === gender)
-      .map(it => {
+  return store.state.competitionEvents
+      .filter((it: EventType) => it.gender === gender)
+      .map((it: EventType) => {
         return {
           label: it.eventName,
           value: it.id,
@@ -163,19 +113,23 @@ function filterOptionsEvent(gender: 'male' | 'female') {
 }
 
 function toFormData(detail: TeamDetail): TeamFromData {
-  const leader = teamDetailRef.value.members
-      .find(it => it.type === 'leader') as TeamMember
-  const teamDoctor = teamDetailRef.value.members
-      .find(it => it.type === 'team_doctor') as TeamMember
-  const referee = teamDetailRef.value.members
-      .find(it => it.type === 'referee') as Referee
-  const coaches = teamDetailRef.value.members
+  const leader = (detail.members
+          .find(it => it.type === 'team_leader') ?? {type: 'team_leader'}
+  ) as TeamMember
+  const teamDoctor = (detail.members
+          .find(it => it.type === 'team_doctor') ?? {type: 'team_doctor'}
+  ) as TeamMember
+  const referee = (detail.members
+          .find(it => it.type === 'referee') ?? {type: 'team_doctor'}
+  ) as Referee
+  const coaches = detail.members
       .filter(it => it.type === 'coach') as Array<TeamMember>
 
-  const athletes = teamDetailRef.value.members
+  const athletes = detail.members
       .filter(it => it.type === 'athlete') as Array<Athlete>
   return {
-    name: detail.name,
+    id: detail.id!,
+    name: detail.name || '',
     leader,
     teamDoctor,
     referee,
@@ -185,12 +139,13 @@ function toFormData(detail: TeamDetail): TeamFromData {
 }
 
 function toDetail(formData: TeamFromData): TeamDetail {
-  formData.leader.type = 'leader'
+  formData.leader.type = 'team_leader'
   formData.teamDoctor.type = 'team_doctor'
   formData.referee.type = 'referee'
   formData.coaches.forEach(it => it.type = 'coach')
   formData.athletes.forEach(it => it.type = 'athlete')
   return {
+    id: formData.id!,
     name: formData.name,
     members: [
       formData.leader,
@@ -221,6 +176,10 @@ function createAthlete(): Athlete {
   }
 }
 
+const emit = defineEmits<{
+  (e: 'submitted', succeed: boolean): void
+}>()
+
 const rPasswordFormItemRef = ref<any>(null)
 const formRef = ref<any>(null)
 
@@ -234,14 +193,21 @@ function handleSubmit(e: MouseEvent) {
   e.preventDefault()
   formRef.value.validate((errors: any) => {
     if (!errors) {
-      //TODO: 提交
+      const detail = toDetail(teamFormDataRef.value)
+      updateTeamDetail(detail).then((result) => {
+        if (result.code === 0) {
+          message.success("提交成功")
+          emit('submitted', true)
+        } else {
+          message.error(`提交失败：${result.msg}`)
+          emit('submitted', false)
+        }
+      })
     } else {
       message.error('报名表验证失败！')
     }
   })
 }
-
-teamFormDataRef.value = toFormData(teamDetailRef.value)
 
 
 const genderSelectOptions = [

@@ -1,113 +1,47 @@
 <script setup lang="ts">
-import {NTable} from "naive-ui";
+import {NTable, useMessage} from "naive-ui";
 import {computed, ref, Ref} from "vue";
+import {useStore} from "vuex";
+import {onBeforeRouteUpdate} from "vue-router";
+import {getTeamDetail} from "../../api/team";
 
+const store = useStore();
+const message = useMessage()
 const teamDetailRef = ref<TeamDetail>({
-  id: 0,
-  name: '小兔崽子队',
-  members: [
-    {
-      id: 0,
-      name: 'pb',
-      type: 'leader',
-      idNumber: '222222222222222222',
-      phone: '11111111111',
-    },
-    {
-      id: 1,
-      name: 'khy',
-      type: 'coach',
-      idNumber: '222222222222222222',
-      phone: '11111111111',
-      gender: 'male',
-    },
-    {
-      id: 2,
-      name: 'khy2',
-      type: 'coach',
-      idNumber: '222222222222222222',
-      phone: '11111111111',
-      gender: 'female',
-    },
-    {
-      id: 3,
-      name: 'Doctor. Pb',
-      type: 'team_doctor',
-      idNumber: '222222222222222222',
-      phone: '11111111111',
-    },
-    {
-      id: 4,
-      name: 'Referee. Pb',
-      type: 'referee',
-      idNumber: '222222222222222222',
-      phone: '11111111111',
-      userName: '233333',
-      password: 'pwd'
-    },
-    {
-      id: 5,
-      name: '小兔崽子',
-      type: 'athlete',
-      idNumber: '222222222222222222',
-      phone: '11111111111',
-      age: 10,
-      gender: 'male',
-      athleteId: '001',
-      eventIds: [
-        1, 2, 3,
-      ]
-    },
-    {
-      id: 5,
-      name: '小兔崽子2',
-      type: 'athlete',
-      idNumber: '222222222222222222',
-      phone: '11111111111',
-      age: 11,
-      gender: 'female',
-      athleteId: '001',
-      eventIds: [
-        1, 2, 4,
-      ]
-    },
-  ]
+  members: []
 });
 
-const competitionEvents: Array<EventType> = [
-  {
-    id: 1,
-    eventName: '单杠',
-    gender: 'male',
-  },
-  {
-    id: 2,
-    eventName: '双杠',
-    gender: 'male',
-  },
-  {
-    id: 3,
-    eventName: '自由体操',
-    gender: 'male',
-  }, {
-    id: 4,
-    eventName: '自由体操',
-    gender: 'female',
-  },
-]
 
-const competitionEventsIdMap = computed(() => new Map(competitionEvents.map(it => [it.id, it])))
+function refresh() {
+  store.dispatch("tryUpdateEvents")
+  getTeamDetail().then(result => {
+    if (result.code === 0) {
+      teamDetailRef.value = result.data!
+    } else {
+      message.error(`获取队伍信息失败：${result.msg}`)
+    }
+  })
+}
+
+onBeforeRouteUpdate(() => refresh())
+refresh()
+
+
+const competitionEventsIdMap = computed<Map<number, EventType>>(() => new Map(store.state.competitionEvents.map((it: EventType) => [it.id, it])))
 
 
 const leader = computed(
     () => teamDetailRef.value.members
-        .find(it => it.type === 'leader'))
+            .find(it => it.type === 'team_leader')
+        ?? {type: 'team_leader'})
 const teamDoctor = computed(
     () => teamDetailRef.value.members
-        .find(it => it.type === 'team_doctor'))
+            .find(it => it.type === 'team_doctor')
+        ?? {type: 'team_doctor'})
 const referee = computed(
     () => teamDetailRef.value.members
-        .find(it => it.type === 'referee') as Referee)
+            .find(it => it.type === 'referee') as Referee | undefined
+        ?? {type: 'referee'})
 
 const coaches = computed(
     () => teamDetailRef.value.members
@@ -115,7 +49,7 @@ const coaches = computed(
 
 const athletes = computed(
     () => teamDetailRef.value.members
-        .filter(it => it.type === 'athlete') as Array<Athlete>)
+        .filter(it => it.type === 'athlete') as Athlete[])
 
 const athleteRowNumber = computed(() =>
     athletes.value
@@ -134,19 +68,19 @@ function calcCompetition(ids: Array<number>) {
   }> = []
   const iterLen = Math.ceil(ids.length / 2)
   for (let i = 0; i < iterLen; i++) {
-    const eventA = competitionEventsIdMap.value.get(ids[i * 2]) || competitionEvents[0]
+    const eventA = competitionEventsIdMap.value.get(ids[i * 2])
     const single = i * 2 + 1 >= ids.length
     if (single) {
       result.push({
         single: true,
-        eventA: eventA.eventName!,
+        eventA: eventA?.eventName!,
       })
     } else {
-      const eventB = competitionEventsIdMap.value.get(ids[i * 2]) || competitionEvents[0]
+      const eventB = competitionEventsIdMap.value.get(ids[i * 2])
       result.push({
         single: false,
-        eventA: eventA.eventName!,
-        eventB: eventB.eventName,
+        eventA: eventA?.eventName ?? '未知比赛项目',
+        eventB: eventB?.eventName ?? '未知比赛项目',
       })
     }
   }
@@ -176,30 +110,36 @@ function calcCompetition(ids: Array<number>) {
     <tr>
       <th>领队：</th>
       <td>姓名</td>
-      <td colspan="3">{{ leader.name }}</td>
+      <td colspan="3">{{ leader?.name }}</td>
       <td>身份证号</td>
-      <td colspan="2">{{ leader.idNumber }}</td>
+      <td colspan="2">{{ leader?.idNumber }}</td>
       <td>联系方式</td>
-      <td>{{ leader.phone }}</td>
+      <td>{{ leader?.phone }}</td>
     </tr>
     <tr>
       <th>队医：</th>
       <td>姓名</td>
-      <td colspan="3">{{ teamDoctor.name }}</td>
+      <td colspan="3">{{ teamDoctor?.name }}</td>
       <td>身份证号</td>
-      <td colspan="2">{{ teamDoctor.idNumber }}</td>
+      <td colspan="2">{{ teamDoctor?.idNumber }}</td>
       <td>联系方式</td>
-      <td>{{ teamDoctor.phone }}</td>
+      <td>{{ teamDoctor?.phone }}</td>
     </tr>
     <tr>
       <th>裁判员：</th>
       <td>姓名</td>
-      <td colspan="3">{{ referee.name }}</td>
+      <td colspan="3">{{ referee?.name }}</td>
       <td>身份证号</td>
-      <td colspan="2">{{ referee.idNumber }}</td>
+      <td colspan="2">{{ referee?.idNumber }}</td>
       <td>联系方式</td>
-      <td>{{ referee.phone }}</td>
+      <td>{{ referee?.phone }}</td>
     </tr>
+    <template v-if="coaches.length === 0">
+      <tr>
+        <th>教练员：</th>
+        <td colspan="9">[无]</td>
+      </tr>
+    </template>
     <template v-for="(coach, index) in coaches">
       <tr>
         <th v-if="index === 0" :rowspan="coaches.length">教练员：</th>
@@ -211,6 +151,13 @@ function calcCompetition(ids: Array<number>) {
         <td colspan="2">{{ coach.idNumber }}</td>
         <td>联系方式</td>
         <td>{{ coach.phone }}</td>
+      </tr>
+    </template>
+
+    <template v-if="athletes.length === 0">
+      <tr>
+        <th>运动员：</th>
+        <td colspan="9">[无]</td>
       </tr>
     </template>
     <template v-for="(athlete, index) in athletes">
@@ -276,8 +223,10 @@ function calcCompetition(ids: Array<number>) {
 
   td
     text-align center
+
   td.align-left
     text-align left
+
   th.splitter
     height 10px
     padding 0
