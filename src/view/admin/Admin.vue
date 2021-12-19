@@ -49,6 +49,19 @@ const menuOptions = [
         ),
     key: 'GroupManager',
   },
+  {
+    label: () =>
+        h(
+            RouterLink,
+            {
+              to: {
+                name: 'ProgressManager',
+              }
+            },
+            {default: () => '赛程安排'}
+        ),
+    key: 'ProgressManager',
+  },
 ]
 
 </script>

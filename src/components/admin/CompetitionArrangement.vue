@@ -1,16 +1,38 @@
 <script setup lang="ts">
 import {computed, ref} from "vue";
-import {NModal, NForm, NFormItemGi, NGrid, NSelect, NSpin, SelectOption, useMessage} from "naive-ui";
+import {
+  NDrawer,
+  NDrawerContent,
+  NForm,
+  NFormItemGi,
+  NGrid,
+  NSelect,
+  NSpin,
+  NButton,
+  NTabs,
+  NTabPane,
+  SelectOption,
+  useDialog,
+  useMessage
+} from "naive-ui";
 import {onBeforeRouteUpdate} from "vue-router";
 import {useStore} from "vuex";
-import {addCompetition, addEvent, editCompetition, editEvent} from "../../api/competition";
 
 const showModal = ref(false)
-const model = ref<Competition>({})
 const store = useStore();
+const dialog = useDialog()
 
-const loading = ref(true)
+const loading = ref(false)
 const submitting = ref(false)
+
+
+//数据
+const availableAthletes = [];
+const availableReferees = [];
+
+const model = ref<Arrangement>({
+  groups: []
+})
 
 
 function refresh() {
@@ -37,54 +59,88 @@ function submit() {
 
   }
 }
-function add() {
-  refresh()
-  showModal.value = true
-}
 
-function edit(data: Competition) {
+function arrange(teamId: number) {
   refresh()
   showModal.value = true
-  model.value = data;
+
 }
 
 function clearModal() {
-  model.value = {}
+  model.value = {
+    groups: []
+  }
 }
 
+function exitAlert() {
+  return dialog.warning({
+    title: '确认退出？',
+    content: '你还未提交赛事安排，确认退出？',
+    positiveText: '确定',
+    negativeText: '取消',
+    onPositiveClick: () => {
+      clearModal()
+      showModal.value = false
+    }
+  })
+}
+
+
 defineExpose({
-  edit, add
+  arrange
 })
 
+const currentTab = ref<number>()
+
+function handleAdd() {
+
+  const group: ArrangementGroup = {
+    athletes: [],
+    referees: [],
+  }
+
+  model.value.groups.push();
+
+}
+
+
+function handleClose(name: number) {
+
+}
 
 </script>
 
 <template>
-  <n-modal
+  <n-drawer
       v-model:show="showModal"
-      preset="dialog"
-      title="编辑"
-      positive-text="确认"
-      @positive-click="submit"
-      negative-text="取消"
-      :loading="submitting"
-      @after-leave="clearModal"
+      placement="bottom"
+      height="90%"
+      :on-mask-click="exitAlert"
+      :mask-closable="false"
   >
-    <template #default>
+    <n-drawer-content>
+      <template #header>编辑赛事安排</template>
+      <template #footer>
+        <n-button type="primary">提交</n-button>
+      </template>
       <n-spin :show="loading">
-        <n-form :model="model">
-          <n-grid :cols="24" :x-gap="12">
-            <n-form-item-gi :span="12" label="项目" path="eventValue">
-              <n-select v-model:value="model.eventId" :options="optionsEventRef" filterable/>
-            </n-form-item-gi>
-            <n-form-item-gi :span="12" label="年龄组" path="ageGroupValue">
-              <n-select v-model:value="model.ageClassId" :options="optionsAgeGroupRef" filterable/>
-            </n-form-item-gi>
-          </n-grid>
-        </n-form>
+        <n-tabs
+            v-model:value="currentTab"
+            type="card"
+            :addable="true"
+            :closable="true"
+            @close="handleClose"
+            @add="handleAdd"
+            tab-style="min-width: 80px;"
+        >
+          <n-tab-pane v-for="group in model.groups" :name="group.groupName" :key="group.groupId">
+            {{ group }}
+          </n-tab-pane>
+          <template #prefix>竞赛分组：</template>
+        </n-tabs>
       </n-spin>
-    </template>
-  </n-modal>
+    </n-drawer-content>
+  </n-drawer>
 </template>
 
 

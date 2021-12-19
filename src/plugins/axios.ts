@@ -13,8 +13,14 @@ axios.interceptors.request.use((config) => {
     return config
 })
 
-axios.interceptors.response.use(undefined, (err) => {
-    if (err && err.response ) {
+axios.interceptors.response.use((resp) => {
+    if (resp && resp.data && resp.data.code === 401) {
+        store.commit('clearToken')
+        router.push({name: 'Login'})
+    }
+    return resp;
+}, (err) => {
+    if (err && err.response) {
         if (err.response.data && err.response.data.code === 401) {
             store.commit('clearToken')
             router.push({name: 'Login'})

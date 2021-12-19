@@ -57,12 +57,12 @@ export async function addCompetition(data: Competition): Promise<R<unknown>> {
 }
 
 export async function deleteCompetition(id: number): Promise<R<unknown>> {
-    const resp = await axios.delete(`/admin/competition/${id}`)
+    const resp = await axios.delete(`/admin/competitions/${id}`)
     return resp.data
 }
 
 export async function editCompetition(id: number, data: Competition): Promise<R<unknown>> {
-    const resp = await axios.post(`/admin/competition/${id}`, data)
+    const resp = await axios.post(`/admin/competitions/${id}`, data)
     return resp.data
 }
 

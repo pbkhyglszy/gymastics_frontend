@@ -139,13 +139,13 @@ function calcCompetition(ids: Array<number>) {
     if (single) {
       result.push({
         single: true,
-        eventA: eventA.eventName,
+        eventA: eventA.eventName!,
       })
     } else {
       const eventB = competitionEventsIdMap.value.get(ids[i * 2]) || competitionEvents[0]
       result.push({
         single: false,
-        eventA: eventA.eventName,
+        eventA: eventA.eventName!,
         eventB: eventB.eventName,
       })
     }

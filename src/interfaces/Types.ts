@@ -45,7 +45,8 @@ interface GroupedCompetition {
     groups: Array<{
         ageClassId: number,
         competitionId: number,
-        signNumber?: number,
+        signedNumber?: number,
+        type: 'qualification' | 'final'
     }>
 }
 
@@ -63,4 +64,24 @@ interface EventType {
 }
 
 
+interface Arrangement {
+    competitionId?: number,
+    groups: Array<ArrangementGroup>
+}
+
+interface ArrangementGroup {
+    groupId?: number,
+    groupName?: string,
+    athletes: Array<{
+        id?: number,
+        name?: string,
+        athleteId?: string,
+        order: number,
+    }>,
+    referees: Array<{
+        id?: number,
+        name?: string,
+        isChief?: boolean,
+    }>
+}
 

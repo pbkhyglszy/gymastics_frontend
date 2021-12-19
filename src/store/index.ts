@@ -1,5 +1,6 @@
 import {createStore, Store} from 'vuex'
 import {getAllAgeGroups, getAllEvents} from "../api/competition";
+import {getProgress} from "../api/misc";
 
 export interface State {
     ageGroups?: Array<AgeGroup>,
@@ -7,6 +8,7 @@ export interface State {
     authToken: string | null,
     userName: string,
     loginName: string,
+    progress: number,
 }
 
 export default createStore<State>({
@@ -16,6 +18,7 @@ export default createStore<State>({
         authToken: sessionStorage.getItem('token'),
         userName: '',
         loginName: '',
+        progress: 0,
     },
     mutations: {
         invalidateEvents(state) {
@@ -45,7 +48,15 @@ export default createStore<State>({
         }) {
             state.loginName = payload.loginName;
             state.userName = payload.userName
-        }
+        },
+        updateProgress(state, progress?: number) {
+            if (typeof progress === 'undefined') {
+                state.progress = 0
+            } else {
+                state.progress = progress
+            }
+        },
+
     },
     actions: {
         updateEvents({commit}) {
@@ -61,6 +72,10 @@ export default createStore<State>({
             if (state.ageGroups || state.competitionEvents) {
                 return dispatch('updateEvents')
             }
+        },
+
+        updateProgress({commit}) {
+            return getProgress().then((result) => commit('updateProgress', result.data))
         }
     },
     modules: {},

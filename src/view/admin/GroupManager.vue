@@ -16,9 +16,11 @@ import {onBeforeRouteUpdate} from "vue-router";
 import {Store, useStore} from "vuex";
 import {deleteCompetition, getAllGroupedCompetitions} from "../../api/competition";
 import {State} from "../../store";
+import CompetitionArrangement from "../../components/admin/CompetitionArrangement.vue";
 
 const dialog = useDialog()
 const editor = ref<any>()
+const arrangement = ref<any>()
 const store: Store<State> = useStore()
 const message = useMessage()
 
@@ -42,6 +44,7 @@ refreshData()
 
 function refreshData() {
   store.dispatch("tryUpdateEvents")
+  store.dispatch("updateProgress")
   getAllGroupedCompetitions().then(result => {
     if (result.code === 0) {
       events.value = result.data!
@@ -69,14 +72,17 @@ const competitionData = computed<Array<GroupedCompetitionView>>(() =>
           minAge: ageGroup?.minAge,
           maxAge: ageGroup?.maxAge,
           ageGroupName: ageGroup?.name,
-          signNumber: it.signNumber,
+          signNumber: it.signedNumber,
           groupSize: size,
         }
       })
     })
 );
 const isDetailedTable = ref(true);
-const type = ref<'edit' | 'arrange'>('edit');
+// const type = ref<'edit' | 'arrange'>('edit');
+
+const type = computed(()=> store.state.progress === 0 ? 'edit' : 'arrange')
+
 
 function calcSimpleName(row: GroupedCompetitionView) {
   const genderStr = row.gender === 'male' ? '男子' : '女子'
@@ -123,7 +129,7 @@ const columns = computed<Array<DataTableColumn<GroupedCompetitionView>>>(() => {
               ghost: true,
               type: 'primary',
               onClick: () => {
-
+                arrangement.value?.arrange(row.id)
               }
             },
             {default: () => '赛事安排'}
@@ -195,6 +201,7 @@ const columns = computed<Array<DataTableColumn<GroupedCompetitionView>>>(() => {
 
 <template>
   <competition-edit ref="editor" @submitted="$event && refreshData()"/>
+  <competition-arrangement ref="arrangement"/>
   <div class="wrapper">
     <div class="table-header">
       <n-switch class="display-switch" v-model:value="isDetailedTable">
@@ -202,7 +209,7 @@ const columns = computed<Array<DataTableColumn<GroupedCompetitionView>>>(() => {
         <template #unchecked>简略</template>
       </n-switch>
       <div class="empty"></div>
-      <n-button class="add-button" type="primary" @click="editor?.add()">添加</n-button>
+      <n-button v-if="type==='edit'" class="add-button" type="primary" @click="editor?.add()">添加</n-button>
     </div>
     <div class="table-content">
       <n-data-table

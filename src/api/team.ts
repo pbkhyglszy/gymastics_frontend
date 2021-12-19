@@ -6,12 +6,12 @@ export async function addTeam(data: Team): Promise<R<unknown>> {
 }
 
 export async function deleteTeam(id: number): Promise<R<unknown>> {
-    const resp = await axios.delete(`/admin/team/${id}`)
+    const resp = await axios.delete(`/admin/teams/${id}`)
     return resp.data
 }
 
 export async function editTeam(id: number, data: Competition): Promise<R<unknown>> {
-    const resp = await axios.post(`/admin/team/${id}`, data)
+    const resp = await axios.post(`/admin/teams/${id}`, data)
     return resp.data
 }
 

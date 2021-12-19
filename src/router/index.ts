@@ -6,6 +6,7 @@ import Leader from "../view/leader/Leader.vue"
 import GroupManager from "../view/admin/GroupManager.vue"
 import CompetitionManager from "../view/admin/CompetitionManager.vue"
 import TeamManager from "../view/admin/TeamManager.vue"
+import ProgressManager from "../view/admin/ProgressManager.vue"
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -43,6 +44,11 @@ const routes: Array<RouteRecordRaw> = [
             path: 'team',
             name: 'TeamManager',
             component: TeamManager,
+          },
+          {
+            path: 'progress',
+            name: 'ProgressManager',
+            component: ProgressManager,
           }
         ]
       },

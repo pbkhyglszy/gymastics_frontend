@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import {ref} from "vue";
+import {computed, ref} from "vue";
 import {NModal, NForm, NFormItemGi, NGrid, NInput, NSelect, useMessage, FormRules} from "naive-ui";
-import {addEvent, editEvent} from "../../api/competition";
 import {useStore} from "vuex";
+import {addTeam, editTeam} from "../../api/team";
 
 const showModal = ref(false)
 const model = ref<Team & { reenteredPassword?: string }>({
@@ -25,47 +25,82 @@ function handlePasswordInput() {
   }
 }
 
-const formRules: FormRules = {
-  name: {
-    required: true,
-    trigger: ['input', 'blur'],
-    message: '请输入队伍名',
-  },
-  userName: {
-    required: true,
-    trigger: ['input', 'blur'],
-    message: '请输入用户名',
-  },
-  password: [
-    {
+const emit = defineEmits<{
+  (e: 'submitted', succeed: boolean): void
+}>()
+
+
+const formRules = computed<FormRules>(() => {
+  return {
+    name: {
       required: true,
-      message: '请输入密码'
-    }
-  ],
-  reenteredPassword: [
-    {
-      required: true,
-      message: '请再次输入密码',
-      trigger: ['input', 'blur']
+      trigger: ['input', 'blur'],
+      message: '请输入队伍名',
     },
-    {
-      validator: (rule, value) => {
-        const pwd = model.value.password;
-        return !value || value === pwd
+    userName: {
+      required: true,
+      trigger: ['input', 'blur'],
+      message: '请输入用户名',
+    },
+    password: [
+      {
+        required: editingId.value < 0,
+        message: '请输入密码',
+        trigger: ['input', 'blur']
+      }
+    ],
+    reenteredPassword: [
+      {
+        required: editingId.value < 0,
+        message: '请再次输入密码',
+        trigger: ['input', 'blur']
       },
-      message: '两次密码输入不一致',
-      trigger: ['blur', 'input', 'password-input']
-    }
-  ]
-}
+      {
+        validator: (rule, value) => {
+          const pwd = model.value.password;
+          return !value || value === pwd
+        },
+        message: '两次密码输入不一致',
+        trigger: ['blur', 'input', 'password-input']
+      }
+    ]
+  }
+})
 
 function submit() {
   formRef.value.validate((errors: any) => {
     if (!errors) {
       submitting.value = true
       if (editingId.value >= 0) {
+        editTeam(editingId.value, model.value)
+            .then(result => {
+              if (result.code === 0) {
+                message.success("编辑成功")
+                emit('submitted', true)
+              } else {
+                message.error(`编辑失败：${result.msg}`)
+                emit('submitted', false)
+              }
+            })
+            .finally(() => {
+              submitting.value = false
+              showModal.value = false
+            })
       } else {
-
+        addTeam(model.value)
+            .then(result => {
+              if (result.code === 0) {
+                message.success("编辑成功")
+                emit('submitted', true)
+              } else {
+                message.error(`编辑失败：${result.msg}`)
+                emit('submitted', false)
+              }
+            })
+            .finally(() => {
+              submitting.value = false
+              showModal.value = false
+            })
       }
     } else {
       message.error('报名表验证失败！')
@@ -93,11 +128,6 @@ defineExpose({
   edit, add
 })
 
-const genderSelectOptions = [
-  {value: 'male', label: '男'},
-  {value: 'female', label: '女'}
-]
-
 </script>
 
 <template>
@@ -112,9 +142,9 @@ const genderSelectOptions = [
       @after-leave="clearModal"
   >
     <template #default>
-      <n-form :model="model" :rule="formRules" ref="formRef">
+      <n-form :model="model" :rules="formRules" ref="formRef">
         <n-grid :cols="24" :x-gap="12">
-          <n-form-item-gi :span="12" path="name" label="项目名">
+          <n-form-item-gi :span="12" path="name" label="代表队名称">
             <n-input v-model:value="model.name"/>
           </n-form-item-gi>
           <n-form-item-gi :span="12" path="userName" label="用户名">
