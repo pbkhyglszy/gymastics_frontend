@@ -1,27 +1,29 @@
 <script setup lang="ts">
-import {DataTableColumn, NButton, NDataTable, useDialog} from "naive-ui";
+import {DataTableColumn, NButton, NDataTable, useDialog, useMessage} from "naive-ui";
 import {createDefaultActionColumn} from "../../utils";
+import {ref} from "vue";
+import {onBeforeRouteUpdate} from "vue-router";
+import {deleteTeam, getAllTeam} from "../../api/team";
+import TeamEdit from "../../components/admin/TeamEdit.vue";
 
 const dialog = useDialog()
-const competitionData: Array<Team> = [
-  {
-    id: 1,
-    name: "你塔喵是什么队",
-    userName: "2021120001",
-  },
-  {
-    id: 1,
-    name: "就是这么队",
-    userName: "2021120002",
-  },
-  {
-    id: 1,
-    name: "小兔崽子队",
-    userName: "2021120003",
-  },
+const message = useMessage()
+const editor = ref<any>()
 
+const teamDataRef = ref<Array<Team>>([])
+onBeforeRouteUpdate(() => refreshData())
+refreshData()
 
-];
+function refreshData() {
+  getAllTeam().then(result => {
+    if (result.code === 0) {
+      teamDataRef.value = result.data!
+    } else {
+      message.error(`获取队伍信息失败：${result.msg}`)
+    }
+  })
+}
+
 
 const columns: Array<DataTableColumn<Team>> = [
   {
@@ -40,8 +42,8 @@ const columns: Array<DataTableColumn<Team>> = [
     },
   },
   createDefaultActionColumn(
-      () => {
-
+      (row) => {
+        editor.value?.edit(row)
       },
       (row) => {
         dialog.warning({
@@ -50,7 +52,15 @@ const columns: Array<DataTableColumn<Team>> = [
           positiveText: '确定',
           negativeText: '取消',
           onPositiveClick: () => {
-
+            return deleteTeam(row.id!)
+                .then(result => {
+                  if (result.code === 0) {
+                    message.success("删除成功")
+                    refreshData()
+                  } else {
+                    message.error(`删除失败：${result.msg}`)
+                  }
+                })
           }
         })
       }
@@ -61,16 +71,17 @@ const columns: Array<DataTableColumn<Team>> = [
 </script>
 
 <template>
+  <team-edit ref="editor" @submitted="$event && refreshData()"/>
   <div class="wrapper">
     <div class="table-header">
       <div class="empty"></div>
-      <n-button class="add-button" type="primary">添加</n-button>
+      <n-button class="add-button" type="primary" @click="editor?.add()">添加</n-button>
     </div>
     <div class="table-content">
       <n-data-table
           class="data-table"
           :columns="columns"
-          :data="competitionData"
+          :data="teamDataRef"
           :single-line="false"
           flex-height
       />

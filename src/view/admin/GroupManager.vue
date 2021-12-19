@@ -25,7 +25,7 @@ const message = useMessage()
 interface GroupedCompetitionView extends Competition {
   id?: number,
   eventId?: number,
-  ageGroupId?: number,
+  ageClassId?: number,
   groupSize: number,
   signNumber?: number,
   eventName?: string,
@@ -35,31 +35,7 @@ interface GroupedCompetitionView extends Competition {
   maxAge?: number,
 }
 
-const exmple: GroupedCompetition = {
-  id: 1,
-  groups: [
-    {
-      ageGroupId: 1,
-      competitionId: 1,
-    },
-    {
-      ageGroupId: 2,
-      competitionId: 2,
-    },
-    {
-      ageGroupId: 3,
-      competitionId: 3,
-    }
-  ],
-}
-const events: Ref<Array<GroupedCompetition>> = ref([
-  exmple,
-  exmple,
-  exmple,
-  exmple,
-  exmple,
-  exmple,
-]);
+const events: Ref<Array<GroupedCompetition>> = ref([]);
 
 onBeforeRouteUpdate(() => refreshData())
 refreshData()
@@ -83,10 +59,10 @@ const competitionData = computed<Array<GroupedCompetitionView>>(() =>
       const size = entry.groups.length;
       const eventDetail = competitionEventsIdMap.value.get(entry.id)
       return entry.groups.map(it => {
-        const ageGroup = ageGroupsIdMap.value.get(entry.id)
+        const ageGroup = ageGroupsIdMap.value.get(it.ageClassId)
         return {
           id: it.competitionId,
-          ageGroupId: it.ageGroupId,
+          ageClassId: it.ageClassId,
           eventId: eventDetail?.id,
           eventName: eventDetail?.eventName,
           gender: eventDetail?.gender,
@@ -184,7 +160,7 @@ const columns = computed<Array<DataTableColumn<GroupedCompetitionView>>>(() => {
       title: '年龄分组',
       key: 'ageGroup',
       render(row) {
-        return `${row.minAge}-${row.maxAge}`
+        return row.ageGroupName || `${row.minAge}-${row.maxAge}岁组`
       },
     },
 

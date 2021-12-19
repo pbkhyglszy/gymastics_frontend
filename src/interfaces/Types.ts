@@ -1,7 +1,7 @@
 interface Team {
-    id: number,
-    name: string,
-    userName: string,
+    id?: number,
+    name?: string,
+    userName?: string,
     password?: string,
 }
 
@@ -33,20 +33,17 @@ interface Referee extends TeamMember {
     password?: string,
 }
 
-
-
-
 interface Competition {
     id?: number,
     eventId?: number,
-    ageGroupId?: number,
+    ageClassId?: number,
 }
 
 
 interface GroupedCompetition {
     id: number,
     groups: Array<{
-        ageGroupId: number,
+        ageClassId: number,
         competitionId: number,
         signNumber?: number,
     }>

@@ -24,13 +24,13 @@ const optionsAgeGroupRef = computed(() => store.state.ageGroups.map((it: AgeGrou
       }
     })
 )
-const loading = ref(true)
 const submitting = ref(false)
 
 
 function refresh() {
   store.dispatch("tryUpdateEvents")
 }
+
 onBeforeRouteUpdate(() => refresh())
 refresh()
 
@@ -79,6 +79,7 @@ function submit() {
         })
   }
 }
+
 function add() {
   refresh()
   showModal.value = true
@@ -88,10 +89,12 @@ function edit(data: Competition) {
   refresh()
   showModal.value = true
   model.value = data;
+  editingId.value = data.id!
 }
 
 function clearModal() {
   model.value = {}
+  editingId.value = -1
 }
 
 defineExpose({
@@ -113,18 +116,16 @@ defineExpose({
       @after-leave="clearModal"
   >
     <template #default>
-      <n-spin :show="loading">
-        <n-form :model="model">
-          <n-grid :cols="24" :x-gap="12">
-            <n-form-item-gi :span="12" label="项目" path="eventValue">
-              <n-select v-model:value="model.eventId" :options="optionsEventRef" filterable/>
-            </n-form-item-gi>
-            <n-form-item-gi :span="12" label="年龄组" path="ageGroupValue">
-              <n-select v-model:value="model.ageGroupId" :options="optionsAgeGroupRef" filterable/>
-            </n-form-item-gi>
-          </n-grid>
-        </n-form>
-      </n-spin>
+      <n-form :model="model">
+        <n-grid :cols="24" :x-gap="12">
+          <n-form-item-gi :span="12" label="项目" path="eventValue">
+            <n-select v-model:value="model.eventId" :options="optionsEventRef" filterable/>
+          </n-form-item-gi>
+          <n-form-item-gi :span="12" label="年龄组" path="ageGroupValue">
+            <n-select v-model:value="model.ageClassId" :options="optionsAgeGroupRef" filterable/>
+          </n-form-item-gi>
+        </n-grid>
+      </n-form>
     </template>
   </n-modal>
 </template>

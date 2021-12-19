@@ -32,7 +32,7 @@ function login() {
                 name: 'Admin'
               })
               break
-            case 'leader':
+            case 'team_leader':
               router.push({
                 name: 'Leader'
               })

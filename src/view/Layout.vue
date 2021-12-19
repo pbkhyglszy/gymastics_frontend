@@ -1,9 +1,13 @@
 <script setup lang="ts">
 import {NButton, NLayout, NLayoutContent, NLayoutHeader, NIcon} from "naive-ui";
-import {ref} from "vue";
+import {computed, ref} from "vue";
 import {ArrowBack} from "@vicons/ionicons5";
+import {useStore} from "vuex";
 
-const welcomeMsg = ref("Welcome! Xxx")
+const store = useStore();
+const welcomeMsg = computed(() => {
+  return `Welcome，${store.state.loginName}`
+})
 const user = ref("WarmthDawn")
 
 </script>
@@ -36,6 +40,7 @@ const user = ref("WarmthDawn")
 <style scoped lang="stylus">
 .layout-header
   height 60px
+
   & + div
     top 60px
 
@@ -48,10 +53,13 @@ const user = ref("WarmthDawn")
   flex-direction row
   padding 10px 20px
   align-items center
-  &>div, &>button
+
+  & > div, & > button
     margin 0 10px
+
   .empty
     flex 1 1 0
+
   .welcome
     font-size 24px
 

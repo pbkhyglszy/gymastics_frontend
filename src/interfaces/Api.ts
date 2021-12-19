@@ -10,5 +10,5 @@ interface LoginResult {
     token: string,
     userName: string,
     name: string,
-    userType: 'admin' | 'referee' | 'leader'
+    userType: 'admin' | 'referee' | 'team_leader'
 }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {ref} from "vue";
+import {computed, ref} from "vue";
 import {NModal, NForm, NFormItemGi, NGrid, NInput, NSelect, useMessage} from "naive-ui";
 import {addAgeGroup, editAgeGroup} from "../../api/competition";
 import {useStore} from "vuex";
@@ -12,6 +12,16 @@ const submitting = ref(false)
 
 const message = useMessage()
 const editingId = ref(-1)
+
+const ageRange = computed({
+  get() {
+    return [model.value.minAge, model.value.maxAge]
+  },
+  set(val: Array<number>) {
+    model.value.minAge = val[0]
+    model.value.maxAge = val[1]
+  }
+})
 
 
 function submit() {
@@ -94,13 +104,14 @@ const genderSelectOptions = [
           <n-form-item-gi :span="8" label="名称（可选）" path="eventValue">
             <n-input v-model:value="model.name"/>
           </n-form-item-gi>
-          <n-form-item-gi :span="16" label="需求性别" path="ageGroupValue">
+          <n-form-item-gi :span="16" label="年龄范围" path="ageGroupValue">
             <!--              <n-select v-model:value="model.gender" :options="genderSelectOptions" filterable/>-->
             <n-input
                 pair
                 separator="-"
                 :placeholder="['最小年龄', '最大年龄']"
                 clearable
+                v-model:value="ageRange"
             >
               <template #suffix>岁</template>
             </n-input>

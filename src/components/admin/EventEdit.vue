@@ -53,15 +53,18 @@ function submit() {
 
 function add() {
   showModal.value = true
+  clearModal()
 }
 
 function edit(data: EventType) {
   showModal.value = true
   model.value = data;
+  editingId.value = data.id!;
 }
 
 function clearModal() {
   model.value = {}
+  editingId.value = -1;
 }
 
 defineExpose({
