@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import {NLayout, NLayoutSider, NLayoutContent, NLayoutFooter, NMenu} from "naive-ui";
 import {computed, h} from "vue";
-import {RouterLink, useRouter} from "vue-router";
+import {onBeforeRouteUpdate, RouterLink, useRouter} from "vue-router";
 
 const router = useRouter()
 
 const selected = computed(() => router.currentRoute.value.name)
+
 
 
 const menuOptions = [

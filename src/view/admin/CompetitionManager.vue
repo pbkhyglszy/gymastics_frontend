@@ -1,50 +1,26 @@
 <script setup lang="ts">
-import {DataTableColumn, NButton, NDataTable, useDialog} from "naive-ui";
+import {DataTableColumn, NButton, NDataTable, useDialog, useMessage} from "naive-ui";
 import {createDefaultActionColumn} from "../../utils";
-import {ref} from "vue";
+import {computed, ref} from "vue";
+import {useStore} from "vuex";
+import AgeGroupEdit from "../../components/admin/AgeGroupEdit.vue";
+import EventEdit from "../../components/admin/EventEdit.vue";
+import {deleteAgeGroup, deleteEvent} from "../../api/competition";
+import {onBeforeRouteUpdate} from "vue-router";
 
 const dialog = useDialog()
+const store = useStore();
+const message = useMessage()
 
-const ageGroups: Array<AgeGroup> = [
-  {
-    id: 1,
-    minAge: 7,
-    maxAge: 9,
-  },
-  {
-    id: 2,
-    minAge: 9,
-    maxAge: 11,
-  },
-  {
-    id: 3,
-    minAge: 11,
-    maxAge: 13,
-  },
-];
+const ageGroupEditor = ref<any>()
+const eventEditor = ref<any>()
 
-const competitionEvents: Array<EventType> = [
-  {
-    id: 1,
-    eventName: '单杠',
-    gender: 'male',
-  },
-  {
-    id: 2,
-    eventName: '双杠',
-    gender: 'male',
-  },
-  {
-    id: 3,
-    eventName: '自由体操',
-    gender: 'male',
-  }, {
-    id: 4,
-    eventName: '自由体操',
-    gender: 'female',
-  },
-]
+const ageGroupsRef = computed(() => store.state.ageGroups)
+const competitionEventsRef = computed(() => store.state.competitionEvents)
 
+
+onBeforeRouteUpdate(() => store.dispatch("tryUpdateEvents"))
+store.dispatch("tryUpdateEvents")
 
 const eventsColumns: Array<DataTableColumn<EventType>> = [
   {
@@ -59,8 +35,8 @@ const eventsColumns: Array<DataTableColumn<EventType>> = [
     },
   },
   createDefaultActionColumn(
-      () => {
-
+      (row) => {
+        eventEditor.value?.edit(row)
       },
       (row) => {
         dialog.warning({
@@ -69,7 +45,16 @@ const eventsColumns: Array<DataTableColumn<EventType>> = [
           positiveText: '确定',
           negativeText: '取消',
           onPositiveClick: () => {
-
+            return deleteEvent(row.id!)
+                .then(result => {
+                  if (result.code === 0) {
+                    message.success("删除成功")
+                    store.commit("invalidateEvents")
+                    store.dispatch("updateEvents")
+                  } else {
+                    message.error(`删除失败：${result.msg}`)
+                  }
+                })
           }
         })
       }
@@ -95,6 +80,7 @@ const ageGroupsColumns: Array<DataTableColumn<AgeGroup>> = [
   },
   createDefaultActionColumn(
       (row) => {
+        ageGroupEditor.value?.edit(row)
       },
       (row) => {
         dialog.warning({
@@ -103,7 +89,16 @@ const ageGroupsColumns: Array<DataTableColumn<AgeGroup>> = [
           positiveText: '确定',
           negativeText: '取消',
           onPositiveClick: () => {
-
+            return deleteAgeGroup(row.id!)
+                .then(result => {
+                  if (result.code === 0) {
+                    message.success("删除成功")
+                    store.commit("invalidateEvents")
+                    store.dispatch("updateEvents")
+                  } else {
+                    message.error(`删除失败：${result.msg}`)
+                  }
+                })
           }
         })
       }
@@ -114,29 +109,31 @@ const ageGroupsColumns: Array<DataTableColumn<AgeGroup>> = [
 </script>
 
 <template>
+  <age-group-edit ref="ageGroupEditor"/>
+  <event-edit ref="eventEditor"/>
   <div class="wrapper">
     <div class="table-header">
       <div class="empty"></div>
-      <n-button class="add-button" type="primary">添加比赛项目</n-button>
+      <n-button class="add-button" type="primary" @click="eventEditor?.add()">添加比赛项目</n-button>
     </div>
     <div class="table-content">
       <n-data-table
           class="data-table"
           :columns="eventsColumns"
-          :data="competitionEvents"
+          :data="competitionEventsRef"
           :single-line="false"
           flex-height
       />
     </div>
     <div class="table-header">
       <div class="empty"></div>
-      <n-button class="add-button" type="primary">添加年龄组</n-button>
+      <n-button class="add-button" type="primary" @click="ageGroupEditor?.add()">添加年龄组</n-button>
     </div>
     <div class="table-content">
       <n-data-table
           class="data-table"
           :columns="ageGroupsColumns"
-          :data="ageGroups"
+          :data="ageGroupsRef"
           :single-line="false"
           flex-height
       />

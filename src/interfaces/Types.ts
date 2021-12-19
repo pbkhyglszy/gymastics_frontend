@@ -68,16 +68,16 @@ interface CompetitionEvent extends EventType {
 }
 
 interface AgeGroup {
-    id: number,
+    id?: number,
     name?: string
-    minAge: number,
-    maxAge: number,
+    minAge?: number,
+    maxAge?: number,
 }
 
 interface EventType {
-    id: number,
-    eventName: string,
-    gender: 'male' | 'female',
+    id?: number,
+    eventName?: string,
+    gender?: 'male' | 'female',
 }
 
 

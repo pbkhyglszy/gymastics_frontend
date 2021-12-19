@@ -1,5 +1,13 @@
 <script setup lang="ts">
 import {ref} from "vue";
+import api from '../api'
+import {useMessage} from "naive-ui";
+import {useRouter} from "vue-router";
+import {useStore} from "vuex";
+
+const message = useMessage()
+const router = useRouter()
+const store = useStore()
 
 const userName = ref("")
 const password = ref("")
@@ -7,7 +15,39 @@ const errMsg = ref("")
 
 
 function login() {
-
+  if (!userName.value || !password.value) {
+    return
+  }
+  api.login.login(userName.value, password.value)
+      .then(result => {
+        if (result.code === 0) {
+          store.commit('setToken', result.data?.token)
+          store.commit('updateLogin', {
+            userName: result.data?.userName,
+            loginName: result.data?.name,
+          })
+          switch (result.data?.userType) {
+            case 'admin':
+              router.push({
+                name: 'Admin'
+              })
+              break
+            case 'leader':
+              router.push({
+                name: 'Leader'
+              })
+              break
+            case 'referee':
+              router.push({
+                name: 'Referee'
+              })
+              break
+          }
+        } else {
+          message.error(result.msg || '登录失败')
+          errMsg.value = result.msg || '登录失败'
+        }
+      })
 }
 
 </script>

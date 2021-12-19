@@ -4,12 +4,18 @@ import {getAllAgeGroups, getAllEvents} from "../api/competition";
 interface State {
     ageGroups?: Array<AgeGroup>,
     competitionEvents?: Array<EventType>,
+    authToken: string | null,
+    userName: string,
+    loginName: string,
 }
 
 export default createStore<State>({
     state: {
         ageGroups: [],
         competitionEvents: [],
+        authToken: sessionStorage.getItem('token'),
+        userName: '',
+        loginName: '',
     },
     mutations: {
         invalidateEvents(state) {
@@ -25,6 +31,21 @@ export default createStore<State>({
                 state.competitionEvents = payload.competitionEvents
             }
         },
+        setToken(state, val) {
+            state.authToken = val
+            sessionStorage.setItem('token', val)
+        },
+        clearToken(state) {
+            state.authToken = ''
+            sessionStorage.setItem('token', '')
+        },
+        updateLogin(state, payload: {
+            userName: string,
+            loginName: string,
+        }) {
+            state.loginName = payload.loginName;
+            state.userName = payload.userName
+        }
     },
     actions: {
         updateEvents({commit}) {
@@ -36,7 +57,7 @@ export default createStore<State>({
             }))
         },
 
-         tryUpdateEvents({dispatch}, state) {
+        tryUpdateEvents({dispatch}, state) {
             if (state.ageGroups || state.competitionEvents) {
                 return dispatch('updateEvents')
             }

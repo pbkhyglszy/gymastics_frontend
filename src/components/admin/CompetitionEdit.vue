@@ -1,93 +1,51 @@
 <script setup lang="ts">
-import {ref} from "vue";
+import {computed, ref} from "vue";
 import {NModal, NForm, NFormItemGi, NGrid, NSelect, NSpin, SelectOption} from "naive-ui";
+import {onBeforeRouteUpdate} from "vue-router";
+import {useStore} from "vuex";
 
 const showModal = ref(false)
 const model = ref<CompetitionProto>({})
+const store = useStore();
 
-const optionsEventRef = ref<Array<SelectOption>>([])
-const optionsAgeGroupRef = ref<Array<SelectOption>>([])
+const optionsEventRef = computed(() => store.state.competitionEvents.map((it: EventType) => {
+      return {
+        label: `${it.eventName} （${it.gender === 'male' ? '男' : '女'}）`,
+        value: it.id || 0,
+      }
+    })
+)
+
+const optionsAgeGroupRef = computed(() => store.state.ageGroups.map((it: AgeGroup) => {
+      return {
+        label: it.name || `${it.minAge}-${it.maxAge}岁组`,
+        value: it.id || 0,
+      }
+    })
+)
 const loading = ref(true)
 const submitting = ref(false)
 
-let ageGroups: Array<AgeGroup> = [];
 
-let competitionEvents: Array<EventType> = []
+function refresh() {
+  store.dispatch("tryUpdateEvents")
+}
+onBeforeRouteUpdate(() => refresh())
+refresh()
 
 function submit() {
 
 }
 
-
-function loadSelections() {
-  loading.value = true;
-  setTimeout(() => {
-    loading.value = false;
-    ageGroups = [
-      {
-        id: 1,
-        minAge: 7,
-        maxAge: 9,
-      },
-      {
-        id: 2,
-        minAge: 9,
-        maxAge: 11,
-      },
-      {
-        id: 3,
-        minAge: 11,
-        maxAge: 13,
-      },
-    ]
-    competitionEvents = [
-      {
-        id: 1,
-        eventName: '单杠',
-        gender: 'male',
-      },
-      {
-        id: 2,
-        eventName: '双杠',
-        gender: 'male',
-      },
-      {
-        id: 3,
-        eventName: '自由体操',
-        gender: 'male',
-      },
-      {
-        id: 4,
-        eventName: '自由体操',
-        gender: 'female',
-      },
-    ]
-
-    updateOptionsAgeGroup()
-    updateOptionsEvent()
-  }, 2000)
-}
 function add() {
-  loadSelections()
+  refresh()
   showModal.value = true
 }
 
 function edit(data: Competition) {
-  loadSelections()
+  refresh()
   showModal.value = true
   model.value = data;
-  optionsAgeGroupRef.value = [
-    {
-      label: data.ageGroupName || `${data.minAge}-${data.maxAge}岁组`,
-      value: data.ageGroupId,
-    },
-  ]
-  optionsEventRef.value = [
-    {
-      label: `${data.eventName} （${data.gender === 'male' ? '男' : '女'}）`,
-      value: data.ageGroupId,
-    },
-  ]
 }
 
 function clearModal() {
@@ -97,27 +55,6 @@ function clearModal() {
 defineExpose({
   edit, add
 })
-
-
-function updateOptionsEvent() {
-  optionsEventRef.value = competitionEvents
-      .map(it => {
-        return {
-          label: `${it.eventName} （${it.gender === 'male' ? '男' : '女'}）`,
-          value: it.id,
-        }
-      })
-}
-
-function updateOptionsAgeGroup() {
-  optionsAgeGroupRef.value = ageGroups
-      .map(it => {
-        return {
-          label: it.name || `${it.minAge}-${it.maxAge}岁组`,
-          value: it.id,
-        }
-      })
-}
 
 
 </script>
