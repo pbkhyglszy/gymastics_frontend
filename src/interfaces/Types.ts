@@ -36,34 +36,19 @@ interface Referee extends TeamMember {
 
 
 
-interface CompetitionProto {
+interface Competition {
     id?: number,
     eventId?: number,
     ageGroupId?: number,
 }
 
-interface Competition extends CompetitionProto {
-    id: number,
-    eventId: number,
-    eventName: string,
-    ageGroupId: number,
-    ageGroupName?: string,
-    gender: 'male' | 'female',
-    minAge: number,
-    maxAge: number,
-}
 
-interface CompetitionEvent extends EventType {
+interface GroupedCompetition {
     id: number,
-    eventName: string,
-    gender: 'male' | 'female',
     groups: Array<{
         ageGroupId: number,
         competitionId: number,
         signNumber?: number,
-        name?: string
-        minAge: number,
-        maxAge: number,
     }>
 }
 

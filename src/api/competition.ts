@@ -74,5 +74,27 @@ export async function addEvent(data: EventType): Promise<R<unknown>> {
     return resp.data
 }
 
+export async function getAllGroupedCompetitions(): Promise<R<Array<GroupedCompetition>>> {
+    const resp = await axios.post('')
+    return resp.data
+}
+
+export async function addCompetition(data: Competition): Promise<R<unknown>> {
+    const resp = await axios.post('')
+    return resp.data
+}
+
+export async function deleteCompetition(id: number): Promise<R<unknown>> {
+    const resp = await axios.post('')
+    return resp.data
+}
+
+export async function editCompetition(id: number, data: Competition): Promise<R<unknown>> {
+    const resp = await axios.post('')
+    return resp.data
+}
+
+
+
 
 

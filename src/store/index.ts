@@ -1,7 +1,7 @@
 import {createStore, Store} from 'vuex'
 import {getAllAgeGroups, getAllEvents} from "../api/competition";
 
-interface State {
+export interface State {
     ageGroups?: Array<AgeGroup>,
     competitionEvents?: Array<EventType>,
     authToken: string | null,
@@ -57,7 +57,7 @@ export default createStore<State>({
             }))
         },
 
-        tryUpdateEvents({dispatch}, state) {
+        tryUpdateEvents({dispatch, state}) {
             if (state.ageGroups || state.competitionEvents) {
                 return dispatch('updateEvents')
             }

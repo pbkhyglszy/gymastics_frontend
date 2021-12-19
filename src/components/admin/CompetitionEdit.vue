@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import {computed, ref} from "vue";
-import {NModal, NForm, NFormItemGi, NGrid, NSelect, NSpin, SelectOption} from "naive-ui";
+import {NModal, NForm, NFormItemGi, NGrid, NSelect, NSpin, SelectOption, useMessage} from "naive-ui";
 import {onBeforeRouteUpdate} from "vue-router";
 import {useStore} from "vuex";
+import {addCompetition, addEvent, editCompetition, editEvent} from "../../api/competition";
 
 const showModal = ref(false)
-const model = ref<CompetitionProto>({})
+const model = ref<Competition>({})
 const store = useStore();
 
 const optionsEventRef = computed(() => store.state.competitionEvents.map((it: EventType) => {
@@ -33,10 +34,51 @@ function refresh() {
 onBeforeRouteUpdate(() => refresh())
 refresh()
 
+
+const message = useMessage()
+const editingId = ref(-1)
+
+const emit = defineEmits<{
+  (e: 'submitted', succeed: boolean): void
+}>()
+
 function submit() {
 
+  submitting.value = true
+  if (editingId.value >= 0) {
+    return editCompetition(editingId.value, model.value)
+        .then(result => {
+          if (result.code === 0) {
+            message.success("编辑成功")
+            store.commit("invalidateEvents")
+            store.dispatch("updateEvents")
+            emit('submitted', true)
+          } else {
+            message.error(`编辑失败：${result.msg}`)
+            emit('submitted', false)
+          }
+        })
+        .finally(() => {
+          submitting.value = false
+          showModal.value = false
+        })
+  } else {
+    return addCompetition(model.value)
+        .then(result => {
+          if (result.code === 0) {
+            message.success("添加成功")
+            emit('submitted', true)
+          } else {
+            message.error(`添加失败：${result.msg}`)
+            emit('submitted', false)
+          }
+        })
+        .finally(() => {
+          submitting.value = false
+          showModal.value = false
+        })
+  }
 }
-
 function add() {
   refresh()
   showModal.value = true

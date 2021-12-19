@@ -1,66 +1,99 @@
 <script setup lang="ts">
-import {DataTableColumn, NButton, NSwitch, NDataTable, NButtonGroup, DataTableCreateSummary, useDialog} from "naive-ui";
-import {computed, h, ref} from "vue";
+import {
+  DataTableColumn,
+  NButton,
+  NSwitch,
+  NDataTable,
+  NButtonGroup,
+  DataTableCreateSummary,
+  useDialog,
+  useMessage
+} from "naive-ui";
+import {computed, h, Ref, ref} from "vue";
 import {createDefaultActionColumn} from "../../utils";
 import CompetitionEdit from "../../components/admin/CompetitionEdit.vue";
+import {onBeforeRouteUpdate} from "vue-router";
+import {Store, useStore} from "vuex";
+import {deleteCompetition, getAllGroupedCompetitions} from "../../api/competition";
+import {State} from "../../store";
 
 const dialog = useDialog()
 const editor = ref<any>()
+const store: Store<State> = useStore()
+const message = useMessage()
 
-interface GroupedCompetition extends Competition {
+interface GroupedCompetitionView extends Competition {
+  id?: number,
+  eventId?: number,
+  ageGroupId?: number,
   groupSize: number,
+  signNumber?: number,
+  eventName?: string,
+  ageGroupName?: string,
+  gender?: 'male' | 'female',
+  minAge?: number,
+  maxAge?: number,
 }
 
-const exmple: CompetitionEvent = {
+const exmple: GroupedCompetition = {
   id: 1,
-  eventName: '单杠',
-  gender: 'male',
   groups: [
     {
       ageGroupId: 1,
       competitionId: 1,
-      minAge: 9,
-      maxAge: 11,
     },
     {
       ageGroupId: 2,
       competitionId: 2,
-      minAge: 11,
-      maxAge: 13,
     },
     {
       ageGroupId: 3,
       competitionId: 3,
-      minAge: 13,
-      maxAge: 15,
     }
   ],
 }
-const events: Array<CompetitionEvent> = [
+const events: Ref<Array<GroupedCompetition>> = ref([
   exmple,
   exmple,
   exmple,
   exmple,
   exmple,
   exmple,
-  exmple,
-  exmple,
-  exmple,
-]
+]);
 
+onBeforeRouteUpdate(() => refreshData())
+refreshData()
 
-const competitionData = computed<Array<GroupedCompetition>>(() =>
-    events.flatMap(event => {
-      let size = event.groups.length;
-      return event.groups.map(it => {
+function refreshData() {
+  store.dispatch("tryUpdateEvents")
+  getAllGroupedCompetitions().then(result => {
+    if (result.code === 0) {
+      events.value = result.data!
+    } else {
+      message.error(`获取比赛信息失败：${result.msg}`)
+    }
+  })
+}
+
+const ageGroupsIdMap = computed(() => new Map(store.state.ageGroups!.map(it => [it.id, it])))
+const competitionEventsIdMap = computed(() => new Map(store.state.competitionEvents!.map(it => [it.id, it])))
+
+const competitionData = computed<Array<GroupedCompetitionView>>(() =>
+    events.value.flatMap(entry => {
+      const size = entry.groups.length;
+      const eventDetail = competitionEventsIdMap.value.get(entry.id)
+      return entry.groups.map(it => {
+        const ageGroup = ageGroupsIdMap.value.get(entry.id)
         return {
           id: it.competitionId,
           ageGroupId: it.ageGroupId,
-          eventId: event.id,
-          eventName: event.eventName,
-          gender: event.gender,
-          minAge: it.minAge,
-          maxAge: it.maxAge,
+          eventId: eventDetail?.id,
+          eventName: eventDetail?.eventName,
+          gender: eventDetail?.gender,
+          minAge: ageGroup?.minAge,
+          maxAge: ageGroup?.maxAge,
+          ageGroupName: ageGroup?.name,
+          signNumber: it.signNumber,
           groupSize: size,
         }
       })
@@ -69,14 +102,14 @@ const competitionData = computed<Array<GroupedCompetition>>(() =>
 const isDetailedTable = ref(true);
 const type = ref<'edit' | 'arrange'>('edit');
 
-function calcSimpleName(row: GroupedCompetition) {
+function calcSimpleName(row: GroupedCompetitionView) {
   const genderStr = row.gender === 'male' ? '男子' : '女子'
   return `${genderStr}${row.eventName} ${row.minAge}-${row.maxAge}岁组`
 }
 
-const columns = computed<Array<DataTableColumn<GroupedCompetition>>>(() => {
+const columns = computed<Array<DataTableColumn<GroupedCompetitionView>>>(() => {
 
-  const editActions = createDefaultActionColumn<GroupedCompetition>(
+  const editActions = createDefaultActionColumn<GroupedCompetitionView>(
       (row) => {
         editor.value?.edit(row)
       },
@@ -87,13 +120,21 @@ const columns = computed<Array<DataTableColumn<GroupedCompetition>>>(() => {
           positiveText: '确定',
           negativeText: '取消',
           onPositiveClick: () => {
-
+            return deleteCompetition(row.id!)
+                .then(result => {
+                  if (result.code === 0) {
+                    message.success("删除成功")
+                    refreshData()
+                  } else {
+                    message.error(`删除失败：${result.msg}`)
+                  }
+                })
           }
         })
       }
   )
 
-  const arrangeActions: DataTableColumn<GroupedCompetition> = {
+  const arrangeActions: DataTableColumn<GroupedCompetitionView> = {
     title: '操作',
     key: 'actions',
     className: 'action_col',
@@ -116,12 +157,12 @@ const columns = computed<Array<DataTableColumn<GroupedCompetition>>>(() => {
   }
 
 
-  const signNumberColumn: DataTableColumn<GroupedCompetition> = {
+  const signNumberColumn: DataTableColumn<GroupedCompetitionView> = {
     title: '报名人数',
     key: 'signNumber'
   }
 
-  const detailedColumns: Array<DataTableColumn<GroupedCompetition>> = [
+  const detailedColumns: Array<DataTableColumn<GroupedCompetitionView>> = [
     {
       title: '项目名称',
       key: 'eventName',
@@ -150,7 +191,7 @@ const columns = computed<Array<DataTableColumn<GroupedCompetition>>>(() => {
   ];
 
 
-  const simpleColumns: Array<DataTableColumn<GroupedCompetition>> = [
+  const simpleColumns: Array<DataTableColumn<GroupedCompetitionView>> = [
     {
       title: '赛事名称',
       key: 'competitionName',
@@ -177,7 +218,7 @@ const columns = computed<Array<DataTableColumn<GroupedCompetition>>>(() => {
 </script>
 
 <template>
-  <competition-edit ref="editor"/>
+  <competition-edit ref="editor" @submitted="$event && refreshData()"/>
   <div class="wrapper">
     <div class="table-header">
       <n-switch class="display-switch" v-model:value="isDetailedTable">
