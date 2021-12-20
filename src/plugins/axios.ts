@@ -2,7 +2,7 @@ import axios from "axios";
 import store from "../store";
 import router from "../router";
 
-axios.defaults.baseURL = 'http://10.255.2.129:8080/';
+axios.defaults.baseURL = 'http://localhost:8080/';
 axios.defaults.headers.post['Content-Type'] = 'application/json';
 
 

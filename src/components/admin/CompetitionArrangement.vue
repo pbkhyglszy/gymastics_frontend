@@ -19,7 +19,12 @@ import {
 } from "naive-ui";
 import {onBeforeRouteUpdate} from "vue-router";
 import {useStore} from "vuex";
-import {addCompetitionGroup, getCompetitionGroupInfo, removeCompetitionGroup} from "../../api/arrangement";
+import {
+  addCompetitionGroup,
+  getAthleteByCompetition,
+  getCompetitionGroupInfo, getRefereeByCompetition,
+  removeCompetitionGroup
+} from "../../api/arrangement";
 
 const showModal = ref(false)
 const store = useStore();
@@ -71,8 +76,20 @@ async function refresh() {
         message.error(`获取信息失败：${result.msg}`)
       }
     }),
-
-
+    getAthleteByCompetition(competitionId.value).then(result => {
+      if (result.code === 0) {
+        availableAthletes.value = result.data!
+      } else {
+        message.error(`获取信息失败：${result.msg}`)
+      }
+    }),
+    getRefereeByCompetition(competitionId.value).then(result => {
+      if (result.code === 0) {
+        availableReferees.value = result.data!
+      } else {
+        message.error(`获取信息失败：${result.msg}`)
+      }
+    })
   ])
 }
 
@@ -81,20 +98,13 @@ refresh()
 
 
 const message = useMessage()
-const editingId = ref(-1)
 
 const emit = defineEmits<{
   (e: 'submitted', succeed: boolean): void
 }>()
 
 function submit() {
-
   submitting.value = true
-  if (editingId.value >= 0) {
-
-  } else {
-
-  }
 }
 
 function arrange(id: number) {
