@@ -19,6 +19,7 @@ import {
 } from "naive-ui";
 import {onBeforeRouteUpdate} from "vue-router";
 import {useStore} from "vuex";
+import {addCompetitionGroup, getCompetitionGroupInfo, removeCompetitionGroup} from "../../api/arrangement";
 
 const showModal = ref(false)
 const store = useStore();
@@ -27,7 +28,7 @@ const dialog = useDialog()
 const loading = ref(false)
 const submitting = ref(false)
 
-const id = ref(0)
+const competitionId = ref(0)
 
 
 //数据
@@ -35,7 +36,7 @@ const availableAthletes = ref<Array<Athlete>>([]);
 const availableReferees = ref<Array<Referee>>([]);
 
 const optionsAthletes = computed(() => {
-  availableAthletes.value.map(it=>{
+  availableAthletes.value.map(it => {
     return {
       label: `${it.name}（${it.athleteId}）`,
       value: it.id,
@@ -45,7 +46,7 @@ const optionsAthletes = computed(() => {
 
 
 const optionsReferees = computed(() => {
-  availableReferees.value.map(it=>{
+  availableReferees.value.map(it => {
     return {
       label: it.name,
       value: it.id,
@@ -54,16 +55,25 @@ const optionsReferees = computed(() => {
 })
 
 
-const model = ref<Arrangement>({
-  groups: []
-})
+const model = ref<Array<ArrangementGroup>>([])
 
 
-function refresh() {
-  store.dispatch("tryUpdateEvents")
-  if (model.value.groups.length == 0) {
-    handleAdd()
-  }
+async function refresh() {
+  await Promise.all([
+    store.dispatch("tryUpdateEvents"),
+    getCompetitionGroupInfo(competitionId.value).then(result => {
+      if (result.code === 0) {
+        model.value = result.data!
+        if (model.value.length == 0) {
+          handleAdd()
+        }
+      } else {
+        message.error(`获取信息失败：${result.msg}`)
+      }
+    }),
+
+
+  ])
 }
 
 onBeforeRouteUpdate(() => refresh())
@@ -87,16 +97,15 @@ function submit() {
   }
 }
 
-function arrange(teamId: number) {
+function arrange(id: number) {
+  competitionId.value = id
   refresh()
   showModal.value = true
 
 }
 
 function clearModal() {
-  model.value = {
-    groups: []
-  }
+  model.value = []
 }
 
 function exitAlert() {
@@ -120,22 +129,24 @@ defineExpose({
 const currentTab = ref<number>()
 
 function handleAdd() {
-
-  const group: ArrangementGroup = {
-    groupId: id.value++,
-    groupName: '组名',
-    athletes: [],
-    referees: [],
-  }
-
-  model.value.groups.push(group);
-
-
+  addCompetitionGroup(competitionId.value).then(result => {
+    if (result.code === 0) {
+      refresh()
+    } else {
+      message.error(`获取信息失败：${result.msg}`)
+    }
+  })
 }
 
 
-function handleClose(name: number) {
-
+function handleClose(id: number) {
+  removeCompetitionGroup(id).then(result => {
+    if (result.code === 0) {
+      refresh()
+    } else {
+      message.error(`获取信息失败：${result.msg}`)
+    }
+  })
 }
 
 </script>
@@ -151,7 +162,7 @@ function handleClose(name: number) {
     <n-drawer-content>
       <template #header>编辑赛事安排</template>
       <template #footer>
-        <n-button type="primary">提交</n-button>
+        <n-button type="primary" @click="submit">提交</n-button>
       </template>
       <n-spin :show="loading" class="full">
         <n-tabs
@@ -163,7 +174,7 @@ function handleClose(name: number) {
             @add="handleAdd"
             tab-style="min-width: 80px;"
         >
-          <n-tab-pane v-for="group in model.groups" :tab="group.groupName" :name="group.groupId" :key="group.groupId">
+          <n-tab-pane v-for="group in model" :tab="group.groupName" :name="group.groupId" :key="group.groupId">
             <div class="transfer">
               <n-transfer
                   :options="optionsAthletes"
@@ -196,6 +207,7 @@ function handleClose(name: number) {
   :deep(.n-transfer-list)
     display flex
     flex-direction column
+
     .n-transfer-list-body
       flex 1 1 auto
 
@@ -205,12 +217,15 @@ function handleClose(name: number) {
 
 :deep(.full)
   height 100%
+
   .n-spin-content
     height 100%
+
     .n-tabs
       height 100%
       display flex
       flex-direction column
+
       .n-tab-pane
         flex 1 1 auto
 

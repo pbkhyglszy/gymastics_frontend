@@ -1,14 +1,39 @@
 <script setup lang="ts">
-import {NButton, NLayout, NLayoutContent, NLayoutHeader, NIcon} from "naive-ui";
+import {NButton, NLayout, NLayoutContent, NDropdown, NLayoutHeader, NIcon} from "naive-ui";
 import {computed, ref} from "vue";
 import {ArrowBack} from "@vicons/ionicons5";
 import {useStore} from "vuex";
+import router from "../router";
+import {onBeforeRouteUpdate} from "vue-router";
 
 const store = useStore();
+function loadUsers() {
+  if(!store.state.userName) {
+    router.push({name: 'Login'})
+  }
+}
+
+onBeforeRouteUpdate(() => loadUsers())
+loadUsers()
+
 const welcomeMsg = computed(() => {
   return `Welcome，${store.state.loginName}`
 })
-const user = ref("WarmthDawn")
+const user = computed(() => {
+  return store.state.userName
+})
+
+const options = [{
+  label: '退出登录',
+  key: 1
+}]
+
+function handleSelect(key: number) {
+  if (key === 1) {
+    store.commit('clearToken')
+    router.push({name: 'Login'})
+  }
+}
 
 </script>
 
@@ -29,7 +54,9 @@ const user = ref("WarmthDawn")
         </n-button>
         <div class="welcome">{{ welcomeMsg }}</div>
         <div class="empty"/>
-        <n-button class="user" text>{{ user }}</n-button>
+        <n-dropdown @select="handleSelect" trigger="click" :options="options">
+          <n-button class="user" text>{{ user }}</n-button>
+        </n-dropdown>
       </div>
     </n-layout-header>
     <router-view/>

@@ -76,7 +76,7 @@ function calcCompetition(ids: Array<number>) {
         eventA: eventA?.eventName!,
       })
     } else {
-      const eventB = competitionEventsIdMap.value.get(ids[i * 2])
+      const eventB = competitionEventsIdMap.value.get(ids[i * 2 + 1])
       result.push({
         single: false,
         eventA: eventA?.eventName ?? '未知比赛项目',

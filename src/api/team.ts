@@ -26,6 +26,6 @@ export async function getTeamDetail(): Promise<R<TeamDetail>> {
 }
 
 export async function updateTeamDetail(data: TeamDetail): Promise<R<unknown>> {
-    const resp = await axios.post(`/leader/teams`, data)
+    const resp = await axios.post(`/team-detail`, data)
     return resp.data
 }

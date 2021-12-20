@@ -6,8 +6,8 @@ export interface State {
     ageGroups?: Array<AgeGroup>,
     competitionEvents?: Array<EventType>,
     authToken: string | null,
-    userName: string,
-    loginName: string,
+    userName: string | null,
+    loginName: string | null,
     progress: number,
 }
 
@@ -16,8 +16,8 @@ export default createStore<State>({
         ageGroups: [],
         competitionEvents: [],
         authToken: sessionStorage.getItem('token'),
-        userName: '',
-        loginName: '',
+        userName: sessionStorage.getItem('userName'),
+        loginName: sessionStorage.getItem('loginName'),
         progress: 0,
     },
     mutations: {

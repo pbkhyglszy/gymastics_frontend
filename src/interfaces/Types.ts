@@ -76,7 +76,6 @@ interface ArrangementGroup {
         id?: number,
         name?: string,
         athleteId?: string,
-        order: number,
     }>,
     referees: Array<{
         id?: number,

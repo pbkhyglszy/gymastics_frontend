@@ -252,18 +252,7 @@ const formRules: FormRules = {
       trigger: ['input', 'blur'],
       message: '请输入用户名',
     }],
-    password: [
-      {
-        required: true,
-        message: '请输入密码'
-      }
-    ],
     reenteredPassword: [
-      {
-        required: true,
-        message: '请再次输入密码',
-        trigger: ['input', 'blur']
-      },
       {
         validator: (rule, value) => {
           const pwd = teamFormDataRef.value.referee.password;
@@ -291,6 +280,11 @@ const athleteRules = {
     required: true,
     trigger: ['change', 'blur'],
     message: '请选择性别',
+  }],
+  age: [{
+    required: true,
+    trigger: ['change', 'blur'],
+    message: '请输入年龄',
   }],
   eventIds: [
     {
@@ -406,6 +400,11 @@ const athleteRules = {
                          label="性别">
               <n-select v-model:value="teamFormDataRef.athletes[index].gender" :options="genderSelectOptions"
                         @update:value="teamFormDataRef.athletes[index].eventIds = []"/>
+            </n-form-item>
+            <n-form-item class="size-5" ignore-path-change :path="`athletes[${index}].age`"
+                         :rule="athleteRules.age"
+                         label="年龄">
+              <n-input v-model:value="teamFormDataRef.athletes[index].age" :options="genderSelectOptions" />
             </n-form-item>
             <n-form-item class="size-6" ignore-path-change :path="`athletes[${index}].eventIds`"
                          :rule="athleteRules.eventIds" label="报名的比赛项目">
